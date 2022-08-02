@@ -2,9 +2,11 @@ package de.jakkoble
 
 import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.event.ReactiveEventAdapter
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.lifecycle.ReadyEvent
 import discord4j.core.event.domain.message.MessageCreateEvent
+import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
 
@@ -30,14 +32,15 @@ object JKKBot {
             }.then()
 
             // ChatInputEvent example
-            val handleCommand = gateway.on(ChatInputInteractionEvent::class.java) { event: ChatInputInteractionEvent ->
-                Mono.fromRunnable<Any?> {
-                    if (event.commandName.equals("ping", true)) {
-                        event.reply("Pong!")
+            val handleCommand = client.login().block()?.on(object : ReactiveEventAdapter() {
+                override fun onChatInputInteraction(event: ChatInputInteractionEvent): Publisher<*> {
+                    if (event.commandName == "ping") {
+                        println("HOHOHO")
+                        return event.reply("pong!")
                     }
-                    Mono.empty<Any?>()
+                    return Mono.empty<Any>()
                 }
-            }.then()
+            })?.then()
             printOnLogin.and(handlePingCommand).and(handleCommand)
         }
         login.block()
