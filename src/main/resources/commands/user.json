@@ -1,0 +1,12 @@
+{
+  "name": "user",
+  "description": "Get Information about an User",
+  "options": [
+    {
+      "name": "username",
+      "description": "The name of the User",
+      "type": 6,
+      "required": true
+    }
+  ]
+}
