@@ -31,7 +31,8 @@ open class GlobalCommandRegistrar(private val restClient: RestClient) {
 
         /* Bulk overwrite commands. This is now idempotent, so it is safe to use this even when only 1 command
         is changed/added/removed
-        */applicationService.bulkOverwriteGlobalApplicationCommand(applicationId, commands)
+        */
+        applicationService.bulkOverwriteGlobalApplicationCommand(applicationId, commands)
             .doOnNext { cmd: ApplicationCommandData -> println("Successfully registered Global Command " + cmd.name()) }
             .doOnError { e: Throwable? -> System.out.printf("Failed to register global commands %s%n", e) }
             .subscribe()
@@ -70,9 +71,7 @@ open class GlobalCommandRegistrar(private val restClient: RestClient) {
                 if (resourceAsStream == null) return null
                 InputStreamReader(resourceAsStream).use { inputStreamReader ->
                     BufferedReader(inputStreamReader).use { reader ->
-                        return reader.lines().collect(
-                            Collectors.joining(System.lineSeparator())
-                        )
+                        return reader.lines().collect(Collectors.joining(System.lineSeparator()))
                     }
                 }
             }

@@ -12,6 +12,8 @@ object JKKBot {
     @JvmStatic
     fun main(args: Array<String>) {
         val client = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg")
+        GlobalCommandRegistrar(client).registerCommands(listOf("greet.json", "ping.json"))
+
         val login = client.withGateway { gateway: GatewayDiscordClient ->
             // ReadyEvent example
             val printOnLogin = gateway.on(ReadyEvent::class.java) { event: ReadyEvent ->
@@ -38,8 +40,6 @@ object JKKBot {
             }.then()
             printOnLogin.and(handlePingCommand).and(handleCommand)
         }
-        GlobalCommandRegistrar(client).registerCommands(listOf("greet.json", "ping.json"))
         login.block()
-        // Test
     }
 }
