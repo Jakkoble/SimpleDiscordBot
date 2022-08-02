@@ -40,5 +40,6 @@ object JKKBot {
         }
         GlobalCommandRegistrar(client).registerCommands(listOf("greet.json", "ping.json"))
         login.block()
+        // Test
     }
 }
