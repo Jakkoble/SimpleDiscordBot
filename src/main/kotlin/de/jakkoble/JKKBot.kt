@@ -60,6 +60,7 @@ object JKKBot {
                             .map { obj: ApplicationCommandInteractionOptionValue ->  obj.raw}
                             .get()
                         return@on event.reply("test")
+                        // TODO: Reply with the Embed
                 }
                 return@on Mono.empty()
             }
