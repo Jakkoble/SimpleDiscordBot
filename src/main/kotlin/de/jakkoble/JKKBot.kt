@@ -60,10 +60,8 @@ object JKKBot {
     }
 
     private fun getUserEmbed(userId: Long): EmbedCreateSpec {
-        println("getUserEmbed Function called, btw. ApplicationId = ${discordClient.applicationId.block()}")
         val memberData = discordClient.getMemberById(Snowflake.of(1003362781791256596), Snowflake.of(userId)).data.block() ?: return getErrorEmbet()
         val userData = memberData.user() ?: return getErrorEmbet()
-        println("User Name is ${userData.username()}")
         return EmbedCreateSpec.builder().color(Color.PINK).title("User Data Request")
             .description("These are some Information of the given User <@$userId>")
             .thumbnail("https://cdn.discordapp.com/avatars/$userId/${userData.avatar().get()}?size=64")
