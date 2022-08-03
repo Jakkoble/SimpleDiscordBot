@@ -13,21 +13,15 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.InteractionApplicationCommandCallbackSpec
 import discord4j.rest.util.Color
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import reactor.core.publisher.Mono
-import java.time.Instant
 
 
 object JKKBot {
     private lateinit var discordClient: DiscordClient
 
     @JvmStatic
-    fun main(args: Array<String>): Unit = runBlocking {
-        discordClient = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg")
-            ?: return@runBlocking
+    fun main(args: Array<String>): Unit {
+        discordClient = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg") ?: return
         GlobalCommandRegistrar(discordClient).registerCommands(listOf("greet.json", "ping.json", "user.json"))
 
         val login: Mono<Void> = discordClient.withGateway { gateway: GatewayDiscordClient ->
@@ -35,68 +29,47 @@ object JKKBot {
                 Mono.fromRunnable<Any?> {
                     val self: User = event.self
                     println("Logged in as ${self.username}#${self.discriminator}")
-                    launch {
-                        val embed: EmbedCreateSpec =
-                            EmbedCreateSpec.builder().color(Color.GREEN).title("Status: Online")
-                                .description("JKKBot successfully started and is now online.")
-                                .thumbnail("https://i.imgur.com/FMiS7Xg.jpg")
-                                .addField("\u200B", "\u200B", true)
-                                .timestamp(Instant.now()).footer("JKKBot", "https://i.imgur.com/FMiS7Xg.jpg").build()
-                        discordClient.getChannelById(Snowflake.of(1003392961029087323)).createMessage(embed.asRequest())
-                            .subscribe()
-                    }
+                    val embed: EmbedCreateSpec = EmbedCreateSpec.builder().color(Color.GREEN).title("Status: Online")
+                        .description("JKKBot successfully started and is now online.")
+                        .thumbnail("https://i.imgur.com/FMiS7Xg.jpg")
+                        .build()
+                    discordClient.getChannelById(Snowflake.of(1003392961029087323)).createMessage(embed.asRequest()).subscribe()
                 }
             }.then()
 
             val messageCreate = gateway.on(MessageCreateEvent::class.java) { event: MessageCreateEvent ->
                 val message: Message = event.message
-                if (message.content.equals("!ping", true))
-                    return@on message.channel.flatMap { channel -> channel.createMessage("pong!") }
+                if (message.content.equals("!ping", true)) return@on message.channel.flatMap { channel -> channel.createMessage("pong!") }
                 return@on Mono.empty()
             }.then()
 
             val commandHandler = gateway.on(ChatInputInteractionEvent::class.java) { event: ChatInputInteractionEvent ->
-                if (event.commandName.equals("ping"))
-                    return@on event.reply("pong!")
+                if (event.commandName.equals("ping")) return@on event.reply("pong!")
                 else if (event.commandName.equals("user")) {
-                    val userId = event.getOption("username")
-                        .flatMap { obj: ApplicationCommandInteractionOption -> obj.value }
-                        .map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }
-                        .get()
-                    //return@on event.reply(InteractionApplicationCommandCallbackSpec .builder().addEmbed(EmbedCreateSpec.builder().color(Color.GREEN).title(userId).build()).build())
-                    return@on event.reply(
-                        InteractionApplicationCommandCallbackSpec.builder().addEmbed(getUserEmbed(userId.toLong()))
-                            .build()
-                    )
+                    val userId = event.getOption("username").flatMap { obj: ApplicationCommandInteractionOption -> obj.value }.map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }.get()
+                    return@on event.reply(InteractionApplicationCommandCallbackSpec.builder().addEmbed(getUserEmbed(userId.toLong())).build())
                 }
                 return@on Mono.empty()
             }
             readyHandler.and(messageCreate).and(commandHandler)
         }
-        withContext(Dispatchers.IO) {
-            login.block()
-        }
+        login.block()
     }
 
     private fun getUserEmbed(userId: Long): EmbedCreateSpec {
-        runBlocking {
-            val userData = discordClient.getMemberById(
-                Snowflake.of(1003362781791256596),
-                Snowflake.of(userId)
-            ).data.block()?.user()
-            val embed = userData?.avatar()?.get()?.let {
-                EmbedCreateSpec.builder().color(Color.PINK).title("User Data of <@${userData.locale()}>")
-                    .url("https://jakkoble.de")
-                    .description("JKKBot successfully started and is now online.")
-                    .thumbnail(it)
-                    .addField("Username", userData.username(), true)
-                    .addField("Usertag", userData.discriminator(), true)
-                    .addField("Bot Account", userData.bot().toString(), true)
-                    .addField("\u200B", "\u200B", true)
-                    .timestamp(Instant.now()).footer("JKKBot", "https://i.imgur.com/FMiS7Xg.jpg").build()
-            } ?: return@runBlocking EmbedCreateSpec.builder().color(Color.RED).title("User Not found").build()
-            return@runBlocking embed
-        }
-        return EmbedCreateSpec.builder().color(Color.RED).title("User Not found").build()
+        println("getUserEmbed Function called, btw. ApplicationId = ${discordClient.applicationId.block()}")
+        val memberData = discordClient.getMemberById(Snowflake.of(1003362781791256596), Snowflake.of(userId)).data.block() ?: return getErrorEmbet()
+        val userData = memberData.user() ?: return getErrorEmbet()
+        println("User Name is ${userData.username()}")
+        return EmbedCreateSpec.builder().color(Color.PINK).title("User Data Request")
+            .description("These are some Information of the given User <@$userId>")
+            .thumbnail("https://cdn.discordapp.com/avatars/$userId/${userData.avatar().get()}?size=64")
+            .addField("Name", userData.username(), true)
+            .addField("Tag", userData.discriminator(), true)
+            .addField("ID", userId.toString(), true)
+            .build() ?: return getErrorEmbet()
     }
+    private fun getErrorEmbet(): EmbedCreateSpec = EmbedCreateSpec.builder().color(Color.RED).title("Error")
+        .description("Something went wrong. Please contact the Server Team.")
+        .build()
 }
