@@ -1,0 +1,12 @@
+{
+  "name": "greet",
+  "description": "Greet a Person!",
+  "options": [
+    {
+      "name": "name",
+      "description": "Name of Person you want to greet",
+      "type": 3,
+      "required": true
+    }
+  ]
+}
