@@ -23,7 +23,7 @@ object JKKBot {
     @JvmStatic
     fun main(args: Array<String>) {
         discordClient = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg") ?: return
-        GlobalCommandRegistrar(discordClient).registerCommands(listOf("greet.json", "ping.json", "user.json"))
+        GlobalCommandRegistrar(discordClient).registerCommands(listOf("ping.json", "user.json"))
 
         val login: Mono<Void> = discordClient.withGateway { gateway: GatewayDiscordClient ->
             val readyHandler = gateway.on(ReadyEvent::class.java) { event: ReadyEvent ->
