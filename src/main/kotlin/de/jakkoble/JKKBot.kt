@@ -13,6 +13,7 @@ import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.InteractionApplicationCommandCallbackSpec
 import discord4j.rest.util.Color
+import kotlinx.coroutines.runBlocking
 import reactor.core.publisher.Mono
 
 
@@ -20,7 +21,7 @@ object JKKBot {
     private lateinit var discordClient: DiscordClient
 
     @JvmStatic
-    fun main(args: Array<String>): Unit {
+    fun main(args: Array<String>) {
         discordClient = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg") ?: return
         GlobalCommandRegistrar(discordClient).registerCommands(listOf("greet.json", "ping.json", "user.json"))
 
@@ -33,7 +34,9 @@ object JKKBot {
                         .description("JKKBot successfully started and is now online.")
                         .thumbnail("https://i.imgur.com/FMiS7Xg.jpg")
                         .build()
-                    discordClient.getChannelById(Snowflake.of(1003392961029087323)).createMessage(embed.asRequest()).subscribe()
+                    runBlocking {
+                        discordClient.getChannelById(Snowflake.of(1003392961029087323)).createMessage(embed.asRequest()).subscribe()
+                    }
                 }
             }.then()
 
