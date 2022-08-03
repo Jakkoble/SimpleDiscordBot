@@ -11,6 +11,7 @@ import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
+import discord4j.core.spec.InteractionApplicationCommandCallbackSpec
 import discord4j.rest.util.Color
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,9 +23,11 @@ import java.time.Instant
 
 object JKKBot {
     private lateinit var discordClient: DiscordClient
+
     @JvmStatic
-    fun main(args: Array<String>): Unit = runBlocking{
-        discordClient = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg") ?: return@runBlocking
+    fun main(args: Array<String>): Unit = runBlocking {
+        discordClient = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg")
+            ?: return@runBlocking
         GlobalCommandRegistrar(discordClient).registerCommands(listOf("greet.json", "ping.json", "user.json"))
 
         val login: Mono<Void> = discordClient.withGateway { gateway: GatewayDiscordClient ->
@@ -39,7 +42,8 @@ object JKKBot {
                                 .thumbnail("https://i.imgur.com/FMiS7Xg.jpg")
                                 .addField("\u200B", "\u200B", true)
                                 .timestamp(Instant.now()).footer("JKKBot", "https://i.imgur.com/FMiS7Xg.jpg").build()
-                        discordClient.getChannelById(Snowflake.of(1003392961029087323)).createMessage(embed.asRequest()).subscribe()
+                        discordClient.getChannelById(Snowflake.of(1003392961029087323)).createMessage(embed.asRequest())
+                            .subscribe()
                     }
                 }
             }.then()
@@ -51,16 +55,19 @@ object JKKBot {
                 return@on Mono.empty()
             }.then()
 
-            val commandHandler = gateway.on(ChatInputInteractionEvent::class.java) {event: ChatInputInteractionEvent ->
+            val commandHandler = gateway.on(ChatInputInteractionEvent::class.java) { event: ChatInputInteractionEvent ->
                 if (event.commandName.equals("ping"))
                     return@on event.reply("pong!")
                 else if (event.commandName.equals("user")) {
-                        val userId = event.getOption("username")
-                            .flatMap { obj: ApplicationCommandInteractionOption -> obj.value }
-                            .map { obj: ApplicationCommandInteractionOptionValue ->  obj.raw}
-                            .get()
-                        return@on event.reply("test")
-                        // TODO: Reply with the Embed
+                    val userId = event.getOption("username")
+                        .flatMap { obj: ApplicationCommandInteractionOption -> obj.value }
+                        .map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }
+                        .get()
+                    //return@on event.reply(InteractionApplicationCommandCallbackSpec .builder().addEmbed(EmbedCreateSpec.builder().color(Color.GREEN).title(userId).build()).build())
+                    return@on event.reply(
+                        InteractionApplicationCommandCallbackSpec.builder().addEmbed(getUserEmbed(userId.toLong()))
+                            .build()
+                    )
                 }
                 return@on Mono.empty()
             }
@@ -70,23 +77,26 @@ object JKKBot {
             login.block()
         }
     }
-    private fun getUserEmbed(userId: Long):EmbedCreateSpec? = runBlocking {
-        val userData = withContext(Dispatchers.IO) {
-            discordClient.getMemberById(
+
+    private fun getUserEmbed(userId: Long): EmbedCreateSpec {
+        runBlocking {
+            val userData = discordClient.getMemberById(
                 Snowflake.of(1003362781791256596),
                 Snowflake.of(userId)
-            ).data.block()
-        }?.user()
-        val embed = userData?.avatar()?.get()?.let {
-            EmbedCreateSpec.builder().color(Color.PINK).title("User Data of <@${userData.locale()}>").url("https://jakkoble.de")
-                .description("JKKBot successfully started and is now online.")
-                .thumbnail(it)
-                .addField("Username", userData.username(), true)
-                .addField("Usertag", userData.discriminator(), true)
-                .addField("Bot Account", userData.bot().toString(), true)
-                .addField("\u200B", "\u200B", true)
-                .timestamp(Instant.now()).footer("JKKBot", "https://i.imgur.com/FMiS7Xg.jpg").build()
+            ).data.block()?.user()
+            val embed = userData?.avatar()?.get()?.let {
+                EmbedCreateSpec.builder().color(Color.PINK).title("User Data of <@${userData.locale()}>")
+                    .url("https://jakkoble.de")
+                    .description("JKKBot successfully started and is now online.")
+                    .thumbnail(it)
+                    .addField("Username", userData.username(), true)
+                    .addField("Usertag", userData.discriminator(), true)
+                    .addField("Bot Account", userData.bot().toString(), true)
+                    .addField("\u200B", "\u200B", true)
+                    .timestamp(Instant.now()).footer("JKKBot", "https://i.imgur.com/FMiS7Xg.jpg").build()
+            } ?: return@runBlocking EmbedCreateSpec.builder().color(Color.RED).title("User Not found").build()
+            return@runBlocking embed
         }
-        return@runBlocking embed
+        return EmbedCreateSpec.builder().color(Color.RED).title("User Not found").build()
     }
 }
