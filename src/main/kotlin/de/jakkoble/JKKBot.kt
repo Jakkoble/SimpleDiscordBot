@@ -3,10 +3,13 @@ package de.jakkoble
 import discord4j.common.util.Snowflake
 import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.lifecycle.ReadyEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
+import discord4j.core.`object`.component.ActionRow
+import discord4j.core.`object`.component.Button
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.InteractionApplicationCommandCallbackSpec
@@ -27,7 +30,7 @@ object JKKBot {
     @JvmStatic
     fun main(args: Array<String>) {
         discordClient = DiscordClient.create(botToken) // Create a new Discord Client with Token => "Bot is still "logged out"
-        GlobalCommandRegistrar(discordClient).registerCommands(listOf("ping.json", "user.json")) // Register Commands from json Files
+        GlobalCommandRegistrar(discordClient).registerCommands(listOf("buy.json", "greet.json", "user.json")) // Register Commands from json Files
 
         val login: Mono<Void> = discordClient.withGateway { gateway: GatewayDiscordClient -> // Open up a new GatewayDiscordClient => Bot "logged in"
 
@@ -54,20 +57,44 @@ object JKKBot {
 
             // Listen to the ChatInputInteractionEvent => on Slash Command
             val commandHandler = gateway.on(ChatInputInteractionEvent::class.java) { event: ChatInputInteractionEvent ->
-                if (event.commandName.equals("ping")) return@on event.reply("pong!")
-                else if (event.commandName.equals("user")) {
-                    val userId = event.getOption("username")
-                        .flatMap { obj: ApplicationCommandInteractionOption -> obj.value }
-                        .map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }
-                        .get()
+                when (event.commandName) {
+                    "greet" -> {
+                        val name = event.getOption("name")
+                            .flatMap { obj: ApplicationCommandInteractionOption -> obj.value }
+                            .map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }
+                            .get()
+                        return@on event.reply("Hello $name!")
+                    }
+                    "user" -> {
+                        val userId = event.getOption("username")
+                            .flatMap { obj: ApplicationCommandInteractionOption -> obj.value }
+                            .map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }
+                            .get()
 
-                    // Reply with the created User Embed of getUserEmbed() Methode (Bottom of this class)
-                    return@on event.reply(InteractionApplicationCommandCallbackSpec.builder()
-                        .addEmbed(getUserEmbed(userId.toLong()))
-                        .build())
+                        // Reply with the created User Embed of getUserEmbed() Methode (Bottom of this class)
+                        return@on event.reply(InteractionApplicationCommandCallbackSpec.builder()
+                            .addEmbed(getUserEmbed(userId.toLong()))
+                            .build())
+                    }
+                    "buy" -> {
+                        val embed = EmbedCreateSpec.builder().color(Color.WHITE).title("Are you sure?")
+                            .description("By clicking on yes you order an Apple.")
+                            .build()
+                         val message = event.reply(InteractionApplicationCommandCallbackSpec.builder()
+                             .addEmbed(embed)
+                             .addComponent(ActionRow.of(Button.primary("button-1", "yes")))
+                             .build())
+                         val listener = gateway.on(ButtonInteractionEvent::class.java) { clickEvent: ButtonInteractionEvent ->
+                             if (clickEvent.customId.equals("button-1"))
+                                 return@on clickEvent.reply("You have successfully bought an Apple")
+                             return@on Mono.empty()
+                         }.then()
+                        return@on message.then(listener)
+                    }
                 }
                 return@on Mono.empty() // If nothing replied yet, an empty Mono replies => "nothing" happens
             }
+
             // Combine the two Event Listeners (not necessary for just one Event)
             readyHandler.and(commandHandler)
         }
