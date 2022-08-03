@@ -5,10 +5,8 @@ import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.core.event.domain.lifecycle.ReadyEvent
-import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
 import discord4j.core.`object`.command.ApplicationCommandInteractionOptionValue
-import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.core.spec.InteractionApplicationCommandCallbackSpec
@@ -22,7 +20,7 @@ object JKKBot {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        discordClient = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg") ?: return
+        discordClient = DiscordClient.create("MTAwMzM4MjM2NDg0OTg0ODM2MA.GPahhC._pdE8dfgWEzkEs_bHmBYCQyBqBb98XRv-0ewFg")
         GlobalCommandRegistrar(discordClient).registerCommands(listOf("ping.json", "user.json"))
 
         val login: Mono<Void> = discordClient.withGateway { gateway: GatewayDiscordClient ->
@@ -35,26 +33,26 @@ object JKKBot {
                         .thumbnail("https://i.imgur.com/FMiS7Xg.jpg")
                         .build()
                     runBlocking {
-                        discordClient.getChannelById(Snowflake.of(1003392961029087323)).createMessage(embed.asRequest()).subscribe()
+                        discordClient.getChannelById(Snowflake.of(1003392961029087323))
+                            .createMessage(embed.asRequest())
+                            .subscribe()
                     }
                 }
             }.then()
-
-            val messageCreate = gateway.on(MessageCreateEvent::class.java) { event: MessageCreateEvent ->
-                val message: Message = event.message
-                if (message.content.equals("!ping", true)) return@on message.channel.flatMap { channel -> channel.createMessage("pong!") }
-                return@on Mono.empty()
-            }.then()
-
             val commandHandler = gateway.on(ChatInputInteractionEvent::class.java) { event: ChatInputInteractionEvent ->
                 if (event.commandName.equals("ping")) return@on event.reply("pong!")
                 else if (event.commandName.equals("user")) {
-                    val userId = event.getOption("username").flatMap { obj: ApplicationCommandInteractionOption -> obj.value }.map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }.get()
-                    return@on event.reply(InteractionApplicationCommandCallbackSpec.builder().addEmbed(getUserEmbed(userId.toLong())).build())
+                    val userId = event.getOption("username")
+                        .flatMap { obj: ApplicationCommandInteractionOption -> obj.value }
+                        .map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }
+                        .get()
+                    return@on event.reply(InteractionApplicationCommandCallbackSpec.builder()
+                        .addEmbed(getUserEmbed(userId.toLong()))
+                        .build())
                 }
                 return@on Mono.empty()
             }
-            readyHandler.and(messageCreate).and(commandHandler)
+            readyHandler.and(commandHandler)
         }
         login.block()
     }
