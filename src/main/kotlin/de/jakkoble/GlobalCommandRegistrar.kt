@@ -10,6 +10,11 @@ import java.io.InputStreamReader
 import java.util.*
 import java.util.stream.Collectors
 
+/*
+ * Not my work just turned it into Kotlin File
+ * Source: https://bit.ly/GlobalCommandRegistrar
+*/
+
 open class GlobalCommandRegistrar(private val restClient: RestClient) {
     //Since this will only run once on startup, blocking is okay.
     @Throws(IOException::class)
