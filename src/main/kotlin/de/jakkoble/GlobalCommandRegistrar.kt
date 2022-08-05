@@ -38,7 +38,7 @@ open class GlobalCommandRegistrar(private val restClient: RestClient) {
         is changed/added/removed
         */
         applicationService.bulkOverwriteGlobalApplicationCommand(applicationId, commands)
-            .doOnNext { cmd: ApplicationCommandData -> println("Successfully registered Global Command " + cmd.name()) }
+            .doOnNext { cmd: ApplicationCommandData -> println("Successfully registered Global Command '${cmd.name()}'") }
             .doOnError { e: Throwable? -> System.out.printf("Failed to register global commands %s%n", e) }
             .subscribe()
     }
