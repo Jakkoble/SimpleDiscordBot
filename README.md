@@ -5,7 +5,7 @@ Simple Kotlin Discord Bot with **Tutorial Code Comments** build with **[Discord4
 You can access the **Full Source Code** with References/Concepts for your own Discord Bot.
 </br>
 </br>
-If you have any questions, feel free to **[open a new Issue](https://github.com/Jakkoble/JKKBot/issues/new)**. In case my project helped you, please give this Repository a ⭐.
+If you have any questions, feel free to **[open a new Issue](https://github.com/Jakkoble/JKKBot/issues/new)**. In case my Project helped you, please give it a ⭐.
 </br>
 </br>
 <img src="https://i.imgur.com/0IZZfwz.jpg">
