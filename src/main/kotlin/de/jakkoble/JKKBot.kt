@@ -140,6 +140,6 @@ object JKKBot {
 
    // Gets returned in different places when something went wrong (Embed)
    private fun getErrorEmbed(): EmbedCreateSpec = EmbedCreateSpec.builder().color(Color.RED).title("Error")
-      .description("Something went wrong. Please contact the Server Team.")
+      .description("Something went wrong. Please open an Issue at https://github.com/Jakkoble/JKKBot/issues/new")
       .build()
 }
