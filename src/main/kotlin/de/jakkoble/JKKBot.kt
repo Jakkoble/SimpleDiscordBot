@@ -72,23 +72,39 @@ object JKKBot {
                             .get()
 
                         // Reply with the created User Embed of getUserEmbed() Methode (Bottom of this class)
-                        return@on event.reply(InteractionApplicationCommandCallbackSpec.builder()
-                            .addEmbed(getUserEmbed(userId.toLong()))
-                            .build())
+                        return@on event.reply(
+                            InteractionApplicationCommandCallbackSpec.builder()
+                                .addEmbed(getUserEmbed(userId.toLong()))
+                                .build()
+                        )
                     }
                     "buy" -> {
                         val embed = EmbedCreateSpec.builder().color(Color.WHITE).title("Are you sure?")
-                            .description("By clicking on yes you order an Apple.")
+                            .description("By clicking on yes, you order an Apple.")
                             .build()
-                         val message = event.reply(InteractionApplicationCommandCallbackSpec.builder()
-                             .addEmbed(embed)
-                             .addComponent(ActionRow.of(Button.primary("button-1", "yes")))
-                             .build())
-                         val listener = gateway.on(ButtonInteractionEvent::class.java) { clickEvent: ButtonInteractionEvent ->
-                             if (clickEvent.customId.equals("button-1"))
-                                 return@on clickEvent.reply("You have successfully bought an Apple")
-                             return@on Mono.empty()
-                         }.then()
+                        val message = event.reply(
+                            InteractionApplicationCommandCallbackSpec.builder()
+                                .addEmbed(embed)
+                                .addComponent(ActionRow.of(Button.primary("button-yes", "Yes"),
+                                    Button.danger("button-no", "No")))
+                                .build()
+                        )
+
+                        @Suppress("LABEL_NAME_CLASH")
+                        val listener = gateway.on(ButtonInteractionEvent::class.java) { clickEvent: ButtonInteractionEvent ->
+                            if (clickEvent.customId.equals("button-yes")) {
+                            val confirmEmbed = EmbedCreateSpec.builder().color(Color.WHITE).title("Success!")
+                                .description("You have successfully bought an Apple.")
+                                .build()
+                                return@on clickEvent.reply(InteractionApplicationCommandCallbackSpec.builder().addEmbed(confirmEmbed).ephemeral(true).build()).and(event.deleteReply())
+                            } else if (clickEvent.customId.equals("button-no")) {
+                                val confirmEmbed = EmbedCreateSpec.builder().color(Color.WHITE).title("Success!")
+                                    .description("You have successfully canceled the purchase.")
+                                    .build()
+                                return@on clickEvent.reply(InteractionApplicationCommandCallbackSpec.builder().addEmbed(confirmEmbed).ephemeral(true).build()).and(event.deleteReply())
+                            }
+                            return@on Mono.empty()
+                        }.then()
                         return@on message.then(listener)
                     }
                 }
@@ -100,6 +116,7 @@ object JKKBot {
         }
         login.block()
     }
+
     private fun getUserEmbed(userId: Long): EmbedCreateSpec {
         val memberData = discordClient.getMemberById(Snowflake.of(guildId), Snowflake.of(userId)).data.block() ?: return getErrorEmbed()
         val userData = memberData.user() ?: return getErrorEmbed()
@@ -111,6 +128,7 @@ object JKKBot {
             .addField("ID", userId.toString(), true)
             .build() ?: return getErrorEmbed()
     }
+
     // Gets returned in different places when something went wrong (Embed)
     private fun getErrorEmbed(): EmbedCreateSpec = EmbedCreateSpec.builder().color(Color.RED).title("Error")
         .description("Something went wrong. Please contact the Server Team.")
