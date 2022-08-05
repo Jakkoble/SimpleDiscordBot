@@ -97,10 +97,10 @@ object JKKBot {
                         @Suppress("LABEL_NAME_CLASH")
                         val listener = gateway.on(ButtonInteractionEvent::class.java) { clickEvent: ButtonInteractionEvent ->
                             if (clickEvent.customId.equals("buy-confirm")) {
-                            val confirmEmbed = EmbedCreateSpec.builder().color(Color.WHITE).title("Success!")
-                                .description("You have successfully ordered an Apple.")
-                                .build()
-                                return@on clickEvent.reply(InteractionApplicationCommandCallbackSpec.builder().addEmbed(confirmEmbed).ephemeral(true).build()).and(event.deleteReply())
+                                val confirmEmbed = EmbedCreateSpec.builder().color(Color.WHITE).title("Success!")
+                                    .description("You have successfully ordered an Apple.")
+                                    .build()
+                                    return@on clickEvent.reply(InteractionApplicationCommandCallbackSpec.builder().addEmbed(confirmEmbed).ephemeral(true).build()).and(event.deleteReply())
                             } else if (clickEvent.customId.equals("buy-cancel")) {
                                 val confirmEmbed = EmbedCreateSpec.builder().color(Color.WHITE).title("Purchase Canceled!")
                                     .description("You have successfully canceled the purchase.")
