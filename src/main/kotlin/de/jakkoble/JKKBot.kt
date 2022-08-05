@@ -30,7 +30,7 @@ object JKKBot {
     @JvmStatic
     fun main(args: Array<String>) {
         discordClient = DiscordClient.create(botToken) // Create a new Discord Client with Token => "Bot is still "logged out"
-        GlobalCommandRegistrar(discordClient).registerCommands(listOf("buy.json", "greet.json", "user.json")) // Register Commands from json Files
+        GlobalCommandRegistrar(discordClient).registerCommands(listOf("buy.json", "greet.json", "user.json")) // Register Commands from JSON Files
 
         val login: Mono<Void> = discordClient.withGateway { gateway: GatewayDiscordClient -> // Open up a new GatewayDiscordClient => Bot "logged in"
 
@@ -57,6 +57,7 @@ object JKKBot {
 
             // Listen to the ChatInputInteractionEvent => on Slash Command
             val commandHandler = gateway.on(ChatInputInteractionEvent::class.java) { event: ChatInputInteractionEvent ->
+
                 when (event.commandName) {
                     "greet" -> {
                         val name = event.getOption("name")
@@ -71,7 +72,7 @@ object JKKBot {
                             .map { obj: ApplicationCommandInteractionOptionValue -> obj.raw }
                             .get()
 
-                        // Reply with the created User Embed of getUserEmbed() Methode (Bottom of this class)
+                        // Reply with the created User Embed of getUserEmbed() Method (Bottom of this class)
                         return@on event.reply(
                             InteractionApplicationCommandCallbackSpec.builder()
                                 .addEmbed(getUserEmbed(userId.toLong()))
@@ -79,26 +80,29 @@ object JKKBot {
                         )
                     }
                     "buy" -> {
-                        val embed = EmbedCreateSpec.builder().color(Color.WHITE).title("Are you sure?")
-                            .description("By clicking on yes, you order an Apple.")
+                        val embed = EmbedCreateSpec.builder().color(Color.WHITE).title("Do you want to Purchase the Apple?")
+                            .description("By clicking on 'Confirm', you order an Apple.")
                             .build()
+
+                        // Reply with the created Embet and two Buttons as Component in one ActionRow (next to each other)
                         val message = event.reply(
                             InteractionApplicationCommandCallbackSpec.builder()
                                 .addEmbed(embed)
-                                .addComponent(ActionRow.of(Button.primary("button-yes", "Yes"),
-                                    Button.danger("button-no", "No")))
+                                .addComponent(ActionRow.of(Button.primary("buy-confirm", "Confirm"),
+                                    Button.danger("buy-cancel", "Cancel")))
                                 .build()
                         )
 
+                        // Add a temporary listener to the Message for ButtonInteractionEvent
                         @Suppress("LABEL_NAME_CLASH")
                         val listener = gateway.on(ButtonInteractionEvent::class.java) { clickEvent: ButtonInteractionEvent ->
-                            if (clickEvent.customId.equals("button-yes")) {
+                            if (clickEvent.customId.equals("buy-confirm")) {
                             val confirmEmbed = EmbedCreateSpec.builder().color(Color.WHITE).title("Success!")
-                                .description("You have successfully bought an Apple.")
+                                .description("You have successfully ordered an Apple.")
                                 .build()
                                 return@on clickEvent.reply(InteractionApplicationCommandCallbackSpec.builder().addEmbed(confirmEmbed).ephemeral(true).build()).and(event.deleteReply())
-                            } else if (clickEvent.customId.equals("button-no")) {
-                                val confirmEmbed = EmbedCreateSpec.builder().color(Color.WHITE).title("Success!")
+                            } else if (clickEvent.customId.equals("buy-cancel")) {
+                                val confirmEmbed = EmbedCreateSpec.builder().color(Color.WHITE).title("Purchase Canceled!")
                                     .description("You have successfully canceled the purchase.")
                                     .build()
                                 return@on clickEvent.reply(InteractionApplicationCommandCallbackSpec.builder().addEmbed(confirmEmbed).ephemeral(true).build()).and(event.deleteReply())
@@ -117,6 +121,7 @@ object JKKBot {
         login.block()
     }
 
+    // Methode to get the Embed with User Data
     private fun getUserEmbed(userId: Long): EmbedCreateSpec {
         val memberData = discordClient.getMemberById(Snowflake.of(guildId), Snowflake.of(userId)).data.block() ?: return getErrorEmbed()
         val userData = memberData.user() ?: return getErrorEmbed()
