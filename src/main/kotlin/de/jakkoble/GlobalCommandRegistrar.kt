@@ -11,7 +11,7 @@ import java.util.*
 import java.util.stream.Collectors
 
 /*
- * Not my work just turned it into Kotlin File
+ * Not my work -> just turned it into Kotlin File and edited for my Situation
  * Source: https://bit.ly/GlobalCommandRegistrar
 */
 
