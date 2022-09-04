@@ -1,5 +1,5 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/jakkoble/jkkbot/badge)](https://www.codefactor.io/repository/github/jakkoble/jkkbot)
-# JKKBot
+# SimpleDiscordBot
 Simple Kotlin Discord Bot with **Tutorial Code Comments** build with **[Discord4J](https://discord4j.com)** **for Beginners**. 
 </br>
 ### Usage
